@@ -33,10 +33,7 @@ debian_base_packages=(
     cargo
     wabt
     liblua5.3-dev
-    python3-aiohttp
-    python3-pyparsing
-    python3-colorama
-    python3-tabulate
+    python3-pip
     libsnappy-dev
     libjsoncpp-dev
     rapidjson-dev
@@ -72,18 +69,7 @@ fedora_packages=(
     sudo
     patchelf
     python3
-    python3-aiohttp
     python3-pip
-    python3-magic
-    python3-colorama
-    python3-tabulate
-    python3-boto3
-    python3-pytest
-    python3-pytest-asyncio
-    python3-redis
-    python3-unidiff
-    python3-humanfriendly
-    python3-jinja2
     dnf-utils
     pigz
     net-tools
@@ -120,28 +106,6 @@ if [ "$(uname -m)" != "s390x" ]; then
     fedora_packages+=(lld)
 fi
 
-fedora_python3_packages=(
-    python3-pyyaml
-    python3-urwid
-    python3-pyparsing
-    python3-requests
-    python3-setuptools
-    python3-psutil
-    python3-distro
-    python3-click
-    python3-six
-    python3-pyudev
-)
-
-# an associative array from packages to constrains
-declare -A pip_packages=(
-    [scylla-driver]=
-    [geomet]="<0.3,>=0.1"
-    [traceback-with-variables]=
-    [scylla-api-client]=
-    [treelib]=
-    [allure-pytest]=
-)
 
 pip_symlinks=(
     scylla-api-client
@@ -179,6 +143,7 @@ arch_packages=(
     lua
     python-pyparsing
     python3
+    python3-pip
     rapidjson
     snappy
 )
@@ -240,23 +205,17 @@ minio_download_jobs() {
 print_usage() {
     echo "Usage: install-dependencies.sh [OPTION]..."
     echo ""
-    echo "  --print-python3-runtime-packages Print required python3 packages for Scylla"
     echo "  --print-pip-runtime-packages Print required pip packages for Scylla"
     echo "  --print-pip-symlinks Print list of pip provided commands which need to install to /usr/bin"
     echo "  --print-node-exporter-filename Print node_exporter filename"
     exit 1
 }
 
-PRINT_PYTHON3=false
 PRINT_PIP=false
 PRINT_PIP_SYMLINK=false
 PRINT_NODE_EXPORTER=false
 while [ $# -gt 0 ]; do
     case "$1" in
-        "--print-python3-runtime-packages")
-            PRINT_PYTHON3=true
-            shift 1
-            ;;
         "--print-pip-runtime-packages")
             PRINT_PIP=true
             shift 1
@@ -275,17 +234,8 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-if $PRINT_PYTHON3; then
-    if [ "$ID" != "fedora" ]; then
-        echo "Unsupported Distribution: $ID"
-        exit 1
-    fi
-    echo "${fedora_python3_packages[@]}"
-    exit 0
-fi
-
 if $PRINT_PIP; then
-    echo "${!pip_packages[@]}"
+    cat requirements.txt
     exit 0
 fi
 
@@ -323,14 +273,7 @@ elif [ "$ID" = "fedora" ]; then
         echo "Please remove the package and try to run this script again."
         exit 1
     fi
-    dnf install -y "${fedora_packages[@]}" "${fedora_python3_packages[@]}"
-    PIP_DEFAULT_ARGS="--only-binary=:all: -v"
-    pip_constrained_packages=""
-    for package in ${!pip_packages[@]}
-    do
-        pip_constrained_packages="${pip_constrained_packages} ${package}${pip_packages[$package]}"
-    done
-    pip3 install "$PIP_DEFAULT_ARGS" $pip_constrained_packages
+    dnf install -y "${fedora_packages[@]}"
 
     if [ -f "$(node_exporter_fullpath)" ] && node_exporter_checksum; then
         echo "$(node_exporter_filename) already exists, skipping download"
@@ -382,6 +325,9 @@ elif [ "$ID" == "arch" ]; then
     fi
     echo -e "Configure example:\n\t./configure.py\n\tninja release"
 fi
+
+# Install Pip packages
+pip3 install -U -v --prefer-binary -r requirements.txt
 
 cargo --config net.git-fetch-with-cli=true install cxxbridge-cmd --root /usr/local
 
