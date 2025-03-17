@@ -312,7 +312,7 @@ async def run_all_tests(signaled: asyncio.Event, options: argparse.Namespace) ->
                 console.print_progress(result)
         return failed
 
-    await start_s3_mock_services(minio_tempdir_base=options.tmpdir)
+    # await start_s3_mock_services(minio_tempdir_base=options.tmpdir)
 
     console.print_start_blurb()
     max_failures = options.max_failures

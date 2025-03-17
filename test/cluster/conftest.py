@@ -37,6 +37,14 @@ logger = logging.getLogger(__name__)
 
 print(f"Driver name {DRIVER_NAME}, version {DRIVER_VERSION}")
 
+def optional_dir_path(string) -> Optional[pathlib.Path]:
+    if not string:
+        return None
+    path = pathlib.Path(string)
+    if path.exists() and path.is_dir():
+        return pathlib.Path(string)
+    else:
+        raise NotADirectoryError(string)
 
 def pytest_addoption(parser):
     parser.addoption('--manager-api', action='store', required=True,
@@ -54,6 +62,8 @@ def pytest_addoption(parser):
     parser.addoption('--artifacts_dir_url', action='store', type=str, default=None, dest='artifacts_dir_url',
                      help='Provide the URL to artifacts directory to generate the link to failed tests directory '
                           'with logs')
+    parser.addoption('--space-limited-dir', action='store', type=optional_dir_path, default=None, dest='space_limited_dir',
+                     help='Directory which is space limited to 50mb')
 
 
 # This is a constant used in `pytest_runtest_makereport` below to store the full report for the test case

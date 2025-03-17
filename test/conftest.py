@@ -173,7 +173,7 @@ def pytest_sessionstart(session: pytest.Session) -> None:
     if "xdist" not in sys.modules or not sys.modules["xdist"].is_xdist_worker(request_or_session=session):
         temp_dir = os.path.join(session.config.rootpath, "..", session.config.getoption("--tmpdir"))
         prepare_dirs(tempdir_base=temp_dir, modes=session.config.getoption("--mode") or get_configured_modes())
-        start_s3_mock_services(minio_tempdir_base=temp_dir)
+        # start_s3_mock_services(minio_tempdir_base=temp_dir)
 
 
 def pytest_sessionfinish() -> None:
