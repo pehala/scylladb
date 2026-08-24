@@ -229,6 +229,9 @@ add_scylla_test(rust_test
 add_scylla_test(s3_test
   KIND SEASTAR
   LIBRARIES scylla_encryption utils)
+add_scylla_test(s3_slowdown_test
+  KIND SEASTAR
+  LIBRARIES scylla_encryption utils)
 add_scylla_test(gcp_object_storage_test
   KIND SEASTAR
   LIBRARIES scylla_encryption)

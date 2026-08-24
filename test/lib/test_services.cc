@@ -370,6 +370,12 @@ future<> test_env::do_with_async(noncopyable_function<void (test_env&)> func, te
     if (!cfg.storage.is_local_type()) {
         auto db_cfg = make_shared<db::config>();
         db_cfg->object_storage_endpoints(make_storage_options_config(cfg.storage));
+        if (cfg.object_storage_max_connections) {
+            // This config, not test_env::impl's, is the one storage_manager
+            // reads, and storage_manager is what creates the object storage
+            // client - so the connection limit has to be applied here.
+            db_cfg->object_storage_connections_per_shard.set(unsigned(*cfg.object_storage_max_connections));
+        }
         return seastar::async([func = std::move(func), cfg = std::move(cfg), db_cfg = std::move(db_cfg)] () mutable {
             sharded<sstables::storage_manager> sstm;
             sstm.start(std::ref(*db_cfg), sstables::storage_manager::config{}).get();

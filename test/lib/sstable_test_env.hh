@@ -102,6 +102,11 @@ struct test_env_config {
     db::corrupt_data_handler* corrupt_data_handler = nullptr;
     data_dictionary::storage_options storage; // will be local by default
     size_t available_memory = memory::stats().total_memory();
+    // Caps concurrent in-flight requests to the object storage endpoint. Sets
+    // db::config::object_storage_connections_per_shard, whose default of 128 is
+    // what actually limits the sstable path. Tests that want to saturate the
+    // endpoint have to raise it.
+    std::optional<unsigned> object_storage_max_connections;
 };
 
 data_dictionary::storage_options make_test_object_storage_options(std::string_view type);
